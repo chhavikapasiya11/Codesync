@@ -17,6 +17,14 @@ const versionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
+  message: {
+    type: String,
+    default: '',
+  },
+  audioPath: {
+    type: String, 
+    default: null,
+  },
 });
 
 module.exports = mongoose.model('Version', versionSchema);

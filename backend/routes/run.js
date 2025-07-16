@@ -6,7 +6,7 @@ require('dotenv').config();
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  const { code, languageId } = req.body; // languageId must be provided (e.g., 71 for Python 3)
+  const { code, languageId } = req.body; 
 
   if (!code || !languageId) {
     return res.status(400).json({ error: 'Missing code or languageId' });

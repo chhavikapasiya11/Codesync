@@ -10,6 +10,7 @@ const runRoutes = require('./routes/run');
 const terminalHandler = require('./socket-handler');
 const cors = require('cors');
 const Version = require('./models/Version');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -31,6 +32,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/versions', versionRoutes);
+app.use('/uploads/audio', express.static(path.join(__dirname, 'uploads/audio')));
 app.use('/api/run', runRoutes);
 
 // Health check
@@ -45,15 +47,14 @@ app.use((err, req, res, next) => {
 });
 
 // Store latest code per file per session
-const latestCode = {}; // { sessionId: { filename1: code1, filename2: code2 } }
-
+const latestCode = {}; 
 const sessionToSockets = {};
 const socketToSession = {};
 
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
-  let autoSaveInterval = null;
+  // let autoSaveInterval = null; // ⛔ Disabled auto-save
 
   socket.on('join-session', ({ sessionId, userId }) => {
     socket.join(sessionId);
@@ -74,13 +75,14 @@ io.on('connection', (socket) => {
       socket.emit('code-update', { filename, code });
     }
 
-    // Auto-save every 5 minutes
+    // Auto-save every 5 minutes 
+    /*
     autoSaveInterval = setInterval(async () => {
       if (latestCode[sessionId]) {
         try {
           const version = new Version({
             sessionId,
-            code: JSON.stringify(latestCode[sessionId]), // Save all files
+            code: JSON.stringify(latestCode[sessionId]), 
             savedBy: userId || null,
           });
           await version.save();
@@ -90,6 +92,7 @@ io.on('connection', (socket) => {
         }
       }
     }, 300000); // 5 minutes
+    */
   });
 
   socket.on('code-change', ({ sessionId, filename, code }) => {
@@ -110,7 +113,7 @@ io.on('connection', (socket) => {
       delete socketToSession[socket.id];
     }
 
-    if (autoSaveInterval) clearInterval(autoSaveInterval);
+    // if (autoSaveInterval) clearInterval(autoSaveInterval); //  Disabled auto-save
 
     console.log(`Socket disconnected: ${socket.id}`);
   });
