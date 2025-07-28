@@ -18,6 +18,8 @@ function App() {
             </div>
           }
         />
+
+        {/* ✅ Git Version Panel */}
         <Route path="/git-panel" element={<GitPanelPage />} />
       </Routes>
     </Router>

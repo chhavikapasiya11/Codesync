@@ -10,6 +10,7 @@ const runRoutes = require('./routes/run');
 const terminalHandler = require('./socket-handler');
 const cors = require('cors');
 const Version = require('./models/Version');
+const codeRoutes = require('./routes/codeRoutes');
 const path = require('path');
 
 const app = express();
@@ -34,6 +35,7 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/versions', versionRoutes);
 app.use('/uploads/audio', express.static(path.join(__dirname, 'uploads/audio')));
 app.use('/api/run', runRoutes);
+app.use('/api/code', codeRoutes);
 
 // Health check
 app.get('/', (req, res) => {

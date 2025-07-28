@@ -5,10 +5,12 @@ const versionSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  code: {
-    type: String,
-    required: true,
-  },
+  files: [
+    {
+      name: { type: String, required: true },
+      content: { type: String, required: true },
+    },
+  ],
   savedAt: {
     type: Date,
     default: Date.now,
@@ -22,7 +24,7 @@ const versionSchema = new mongoose.Schema({
     default: '',
   },
   audioPath: {
-    type: String, 
+    type: String,
     default: null,
   },
 });

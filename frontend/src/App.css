@@ -27,6 +27,49 @@
 .App-link {
   color: #61dafb;
 }
+/* CodeEditor.css */
+.run-btn {
+  padding: 8px 14px;
+  background-color: #00e676;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.run-btn:hover {
+  background-color: #1de9b6; /* Slightly darker green */
+  transform: scale(1.05); /* Zoom effect */
+}
+
+.upload-btn {
+  padding: 8px 14px;
+  background-color: #2196f3;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.upload-btn:hover {
+  background-color: #1976d2;
+}
+
+.version-btn {
+  padding: 8px 14px;
+  background-color: #ff9800;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.version-btn:hover {
+  background-color: #f57c00;
+}
+
 
 
 @keyframes App-logo-spin {

@@ -1,11 +1,12 @@
-import { useEffect, useState, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
+import { io } from "socket.io-client";
+import { toast, Toaster } from "react-hot-toast";
 
 export default function GitVersionPanel() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { sessionId, token, code } = location.state || {};
+  const { sessionId, token, files } = location.state || {};
 
   const [versions, setVersions] = useState([]);
   const [diffResult, setDiffResult] = useState(null);
@@ -14,54 +15,71 @@ export default function GitVersionPanel() {
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [restoredFiles, setRestoredFiles] = useState([]);
+  const [showCompareUI, setShowCompareUI] = useState(false); // ✅ NEW STATE
   const audioChunksRef = useRef([]);
-  const [restoredCode, setRestoredCode] = useState(null);
+  const bottomRef = useRef(null);
+  const socketRef = useRef(null);
 
-  const restoredRef = useRef(null); // ✅ Ref for scroll
+  useEffect(() => {
+    if (!sessionId) return;
+    socketRef.current = io("http://localhost:5000", {
+      transports: ["websocket"],
+      withCredentials: true,
+    });
+    socketRef.current.emit("join-session", { sessionId });
+    return () => socketRef.current.disconnect();
+  }, [sessionId]);
 
-  // ✅ Fetch versions
+  const combinedCode =
+    files && files.length > 0
+      ? files.map((file) => `// ${file.name}\n${file.content}`).join("\n\n")
+      : "// No code available";
+
+  useEffect(() => {
+    if (restoredFiles.length > 0)
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [restoredFiles]);
+
   const fetchVersions = async () => {
     if (!sessionId || !token) return;
     setLoading(true);
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/versions/${sessionId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await axios.get(`http://localhost:5000/api/versions/${sessionId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setVersions(res.data);
-    } catch (err) {
-      console.error("Error fetching versions:", err);
-      alert("Failed to fetch version history.");
+    } catch {
+      toast.error("Failed to fetch version history.");
     }
     setLoading(false);
   };
 
   const saveVersion = async () => {
-    if (!code?.trim()) {
-      alert("Cannot save empty code!");
-      return;
-    }
+    if (!sessionId || !token) return toast.error("Missing session ID or token");
+    const currentFiles =
+      files && files.length > 0 ? files : [{ name: "main.js", content: "// No files provided" }];
+
     const formData = new FormData();
     formData.append("sessionId", sessionId);
-    formData.append("code", code);
     formData.append("message", message || "(no message)");
+    formData.append("files", JSON.stringify(currentFiles));
 
     if (audioChunksRef.current.length > 0) {
       const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-      formData.append("audio", blob);
+      formData.append("audio", blob, "audio-note.webm");
     }
 
     try {
       await axios.post("http://localhost:5000/api/versions/save", formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert("✅ Version saved successfully!");
+      toast.success("Version saved successfully!");
       fetchVersions();
       setMessage("");
       audioChunksRef.current = [];
-    } catch (err) {
-      console.error("Error saving version:", err);
-      alert("Failed to save version.");
+    } catch {
+      toast.error("Failed to save version.");
     }
   };
 
@@ -72,16 +90,15 @@ export default function GitVersionPanel() {
         { versionId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setRestoredCode(res.data.code);
-
-      setTimeout(() => {
-        if (restoredRef.current) {
-          restoredRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 200);
-    } catch (err) {
-      console.error("Error restoring version:", err);
-      alert("Failed to restore version.");
+      const restored = res.data.files;
+      setRestoredFiles(restored);
+      await axios.post(`http://localhost:5000/api/code/${sessionId}/files`, {
+        files: restored,
+      });
+      socketRef.current.emit("code-change", { sessionId, files: restored });
+      toast.success("Version restored successfully!");
+    } catch {
+      toast.error("Failed to restore version.");
     }
   };
 
@@ -93,10 +110,9 @@ export default function GitVersionPanel() {
         { versionId1: selectedIds[0], versionId2: selectedIds[1] },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setDiffResult(res.data.diff);
-    } catch (err) {
-      console.error("Error comparing versions:", err);
-      alert("Failed to generate diff.");
+      setDiffResult(res.data.diffs);
+    } catch {
+      toast.error("Failed to generate diff.");
     }
   };
 
@@ -110,9 +126,8 @@ export default function GitVersionPanel() {
       recorder.start();
       setMediaRecorder(recorder);
       setRecording(true);
-    } catch (err) {
-      console.error("Error accessing microphone:", err);
-      alert("Microphone access denied!");
+    } catch {
+      toast.error("Microphone access denied!");
     }
   };
 
@@ -124,9 +139,7 @@ export default function GitVersionPanel() {
   };
 
   useEffect(() => {
-    if (sessionId && token) {
-      fetchVersions();
-    }
+    if (sessionId && token) fetchVersions();
   }, [sessionId, token]);
 
   useEffect(() => {
@@ -134,35 +147,23 @@ export default function GitVersionPanel() {
     else setDiffResult(null);
   }, [selectedIds]);
 
-  if (!sessionId || !token) {
-    return (
-      <div style={{ padding: "20px", color: "#fff", textAlign: "center" }}>
-        ⚠ Missing session data.
-        <button
-          onClick={() => navigate("/")}
-          style={{
-            marginLeft: "10px",
-            backgroundColor: "#007acc",
-            color: "#fff",
-            padding: "8px 12px",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          Back to Editor
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ padding: "10px", backgroundColor: "#090808", color: "#eee", minHeight: "100vh" }}>
-      <h2>📦 Version History</h2>
+    <div
+      style={{
+        padding: "16px",
+        backgroundColor: "#121212",
+        color: "#eee",
+        minHeight: "100vh",
+        top: "0",
+        bottom: "0",
+      }}
+    >
+      <h2 marginBottom="10px">📦 Version History</h2>
+      <Toaster position="top-right" />
 
-      {/* ✅ Code Snapshot */}
+      {/* Original Combined Code Preview */}
       <textarea
-        value={code || "// No code available"}
+        value={combinedCode}
         readOnly
         style={{
           width: "100%",
@@ -175,7 +176,6 @@ export default function GitVersionPanel() {
         }}
       />
 
-      {/* ✅ Commit message input */}
       <input
         type="text"
         placeholder="Commit message"
@@ -190,12 +190,11 @@ export default function GitVersionPanel() {
         }}
       />
 
-      {/* ✅ Buttons */}
-      <div style={{ marginBottom: "12px" }}>
+      <div style={{ marginBottom: "12px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
         <button
+          type="button"
           onClick={saveVersion}
           style={{
-            marginRight: "8px",
             padding: "8px 12px",
             backgroundColor: "#007acc",
             color: "#fff",
@@ -209,22 +208,109 @@ export default function GitVersionPanel() {
 
         {recording ? (
           <button
+            type="button"
             onClick={stopRecording}
-            style={{ backgroundColor: "crimson", color: "#fff", padding: "8px 12px", borderRadius: "4px" }}
+            style={{
+              backgroundColor: "crimson",
+              color: "#fff",
+              padding: "8px 12px",
+              borderRadius: "4px",
+            }}
           >
             ⏹ Stop Recording
           </button>
         ) : (
           <button
+            type="button"
             onClick={startRecording}
-            style={{ backgroundColor: "limegreen", color: "#000", padding: "8px 12px", borderRadius: "4px" }}
+            style={{
+              backgroundColor: "limegreen",
+              color: "#000",
+              padding: "8px 12px",
+              borderRadius: "4px",
+            }}
           >
             🎙 Start Recording
           </button>
         )}
+
+        {/* ✅ Compare Versions Button */}
+        <button
+          onClick={() => setShowCompareUI(true)}
+          style={{
+            padding: "8px 12px",
+            backgroundColor: "#2196f3",
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          🔍 Compare Versions
+        </button>
       </div>
 
-      {/* ✅ Version List */}
+      {/* ✅ Compare UI Panel */}
+      {showCompareUI && (
+        <div
+          style={{
+            backgroundColor: "#1e1e1e",
+            padding: "16px",
+            borderRadius: "8px",
+            border: "1px solid #444",
+            marginBottom: "16px",
+          }}
+        >
+          <h3 style={{ color: "#00e676", marginBottom: "10px" }}>
+            Select exactly 2 versions to compare:
+          </h3>
+          <p style={{ fontSize: "14px", marginBottom: "8px", color: "#bbb" }}>
+            Tick 2 checkboxes from the list below, then click Confirm.
+          </p>
+          <div>
+            <button
+              onClick={() => {
+                if (selectedIds.length === 2) {
+                  compareVersions();
+                  setShowCompareUI(false);
+                  setTimeout(() => {
+                    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+                  }, 500);
+                } else {
+                  toast.error("Please select exactly 2 versions first.");
+                }
+              }}
+              style={{
+                backgroundColor: selectedIds.length === 2 ? "#673ab7" : "#888",
+                color: "#fff",
+                border: "none",
+                padding: "10px 16px",
+                borderRadius: "6px",
+                fontSize: "15px",
+                cursor: selectedIds.length === 2 ? "pointer" : "not-allowed",
+              }}
+            >
+              ✅ Confirm Compare
+            </button>
+            <button
+              onClick={() => setShowCompareUI(false)}
+              style={{
+                marginLeft: "10px",
+                padding: "10px 16px",
+                backgroundColor: "#555",
+                color: "#fff",
+                borderRadius: "6px",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              ❌ Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <h3>📜 Saved Versions</h3>
       {loading ? (
         <p>Loading versions...</p>
@@ -254,8 +340,10 @@ export default function GitVersionPanel() {
                     );
                   }}
                 />{" "}
-                <strong>{new Date(v.savedAt).toLocaleString()}</strong> – {v.message || "(no message)"}
+                <strong>{new Date(v.savedAt).toLocaleString()}</strong> –{" "}
+                {v.message || "(no message)"}
                 <button
+                  type="button"
                   onClick={() => restoreVersion(v._id)}
                   style={{
                     marginLeft: "10px",
@@ -273,7 +361,6 @@ export default function GitVersionPanel() {
               {v.audioPath && (
                 <audio controls style={{ display: "block", marginTop: "8px" }}>
                   <source src={`http://localhost:5000${v.audioPath}`} type="audio/webm" />
-                  Your browser does not support the audio element.
                 </audio>
               )}
             </li>
@@ -281,80 +368,74 @@ export default function GitVersionPanel() {
         </ul>
       )}
 
-      {/* ✅ Diff Result */}
-      {diffResult && (
-        <div style={{ marginTop: "16px" }}>
-          <h3>🧾 Diff Result</h3>
-          <pre
-            style={{
-              backgroundColor: "#2d2d2d",
-              padding: "10px",
-              overflowX: "auto",
-              borderRadius: "4px",
-            }}
-          >
-            {diffResult.map((part, idx) => (
-              <span
-                key={idx}
+      {/* ✅ Restored Files Section */}
+      {restoredFiles.length > 0 && (
+        <div style={{ marginTop: "30px" }}>
+          <h3>✅ Restored Files</h3>
+          {restoredFiles.map((file, idx) => (
+            <div
+              key={idx}
+              style={{
+                background: "#1e1e1e",
+                padding: "12px",
+                marginBottom: "16px",
+                borderRadius: "6px",
+                border: "1px solid #444",
+              }}
+            >
+              <h4 style={{ color: "#00e676" }}>{file.name}</h4>
+              <pre
                 style={{
-                  color: part.added ? "lime" : part.removed ? "tomato" : "#fff",
-                  display: "inline-block",
+                  whiteSpace: "pre-wrap",
+                  fontSize: "14px",
+                  backgroundColor: "#2d2d2d",
+                  padding: "10px",
+                  borderRadius: "4px",
                 }}
               >
-                {part.value}
-              </span>
-            ))}
-          </pre>
+                {file.content}
+              </pre>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* ✅ Restored Code Card */}
-      {restoredCode && (
-        <div
-          ref={restoredRef}
-          style={{
-            marginTop: "16px",
-            backgroundColor: "#1e1e1e",
-            padding: "16px",
-            borderRadius: "8px",
-            border: "1px solid #333",
-            position: "relative",
-          }}
-        >
-          <h3>✅ Restored Code</h3>
-          <pre
-            style={{
-              backgroundColor: "#2d2d2d",
-              padding: "12px",
-              borderRadius: "4px",
-              maxHeight: "300px",
-              overflowY: "auto",
-              color: "#fff",
-            }}
-          >
-            {restoredCode}
-          </pre>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(restoredCode);
-              alert("Copied to clipboard!");
-            }}
-            style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px",
-              backgroundColor: "#007acc",
-              color: "#fff",
-              padding: "6px 12px",
-              borderRadius: "4px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            📋 Copy
-          </button>
+      {/* ✅ Diff Result Section */}
+      {diffResult && (
+        <div style={{ marginTop: "20px" }}>
+          <h3>🧾 Diff Result</h3>
+          {diffResult.map((fileDiff, idx) => (
+            <div
+              key={idx}
+              style={{
+                background: "#1e1e1e",
+                padding: "12px",
+                marginBottom: "16px",
+                borderRadius: "6px",
+                border: "1px solid #444",
+              }}
+            >
+              <h4 style={{ color: "#00e676" }}>{fileDiff.fileName}</h4>
+              <pre style={{ whiteSpace: "pre-wrap", fontSize: "14px" }}>
+                {fileDiff.diff.map((part, i) => {
+                  let bg = part.added
+                    ? "rgba(0,255,0,0.15)"
+                    : part.removed
+                    ? "rgba(231, 20, 20, 0.15)"
+                    : "";
+                  return (
+                    <span key={i} style={{ backgroundColor: bg, display: "block" }}>
+                      {part.value}
+                    </span>
+                  );
+                })}
+              </pre>
+            </div>
+          ))}
         </div>
       )}
+
+      <div ref={bottomRef}></div>
     </div>
   );
 }
