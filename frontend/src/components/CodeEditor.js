@@ -33,13 +33,29 @@ const [fileToDelete, setFileToDelete] = useState(null);
   // ✅ Language Mapping
   const getMonacoLanguage = (ext) => {
     const map = {
-      js: "javascript",
-      ts: "typescript",
-      py: "python",
-      cpp: "cpp",
-      java: "java",
-      html: "html",
-    };
+  js: "javascript",        // Monaco: "javascript"
+  ts: "typescript",        // Monaco: "typescript"
+  py: "python",            // Monaco: "python"
+  cpp: "cpp",              // Monaco: "cpp"
+  java: "java",            // Monaco: "java"
+  html: "html",            // Monaco: "html"
+
+  c: "c",                  // C language
+  cs: "csharp",            // C#
+  php: "php",              // PHP
+  rb: "ruby",              // Ruby
+  swift: "swift",          // Swift
+  go: "go",                // Go
+  rs: "rust",              // Rust
+  kt: "kotlin",            // Kotlin
+  sql: "sql",              // SQL
+  r: "r",                  // R language
+  sh: "bash",              // Bash / Shell
+  lua: "lua",              // Lua
+  scala: "scala",          // Scala
+  perl: "perl",            // Perl
+};
+
     return map[ext] || "plaintext";
   };
 
