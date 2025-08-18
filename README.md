@@ -6,13 +6,18 @@
 
 ## 🌟 Features
 
+## 🌟 Features
+
 ### **Core Features**
 - **Real-time Collaborative Editor:** Edit code simultaneously with peers using a Monaco-based editor integrated with Socket.IO.
 - **Multi-file Support:** Manage multiple files in a single session like VS Code.
 - **Terminal Integration:** Execute code in a private terminal for each user (supports C++, Java, Python, JavaScript, etc.).
 - **Live Linting & Error Tracking:** ESLint integration for JavaScript with real-time error highlighting and a "Know" button for detailed error explanation.
-- **Versioning System:** Automatic and manual code version saving with rollback support.
-- **AI Suggestions (Optional):** Suggests code fixes based on lint errors.
+- **Git-based Versioning Features:**  
+  1. **Save & Commit with Microphone:** Save code snapshots and optionally record a voice note explaining the changes.  
+  2. **Rollback:** Restore any previous version of code in the session.  
+  3. **Difference Viewer:** Compare code changes between versions side-by-side.  
+  4. **Version History:** Browse all past commits and view details for each version.
 - **Language Support:** JavaScript, TypeScript, Python, C++, Java, HTML (easily extendable).
 - **Role-based Authentication:** Sign up and login with secure JWT-based authentication.
 - **Frontend Live Preview:** Render HTML/CSS/JS output live within the platform.
