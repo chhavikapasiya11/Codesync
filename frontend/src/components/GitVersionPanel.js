@@ -6,7 +6,9 @@ import { toast, Toaster } from "react-hot-toast";
 
 export default function GitVersionPanel() {
   const location = useLocation();
-  const { sessionId, token, files } = location.state || {};
+ const sessionId = location.state?.sessionId || localStorage.getItem("sessionId");
+const token = location.state?.token || localStorage.getItem("token");
+const files = location.state?.files || [];
 
   const [versions, setVersions] = useState([]);
   const [diffResult, setDiffResult] = useState(null);
@@ -143,21 +145,20 @@ export default function GitVersionPanel() {
   }, [sessionId, token]);
 
   useEffect(() => {
-    if (selectedIds.length === 2) compareVersions();
-    else setDiffResult(null);
-  }, [selectedIds]);
+  if (selectedIds.length < 2) setDiffResult(null);
+}, [selectedIds]);
 
   return (
-    <div
-      style={{
-        padding: "16px",
-        backgroundColor: "#121212",
-        color: "#eee",
-        minHeight: "100vh",
-        top: "0",
-        bottom: "0",
-      }}
-    >
+   <div
+  style={{
+    padding: "16px",
+    paddingTop: "80px", // ✅ Add extra space so content is below navbar
+    backgroundColor: "#121212",
+    color: "#eee",
+    minHeight: "100vh",
+  }}
+>
+
       <h2 marginBottom="10px">📦 Version History</h2>
       <Toaster position="top-right" />
 

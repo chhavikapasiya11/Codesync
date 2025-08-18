@@ -207,7 +207,7 @@ const [fileToDelete, setFileToDelete] = useState(null);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeFileData]);
 
-  // ✅ Upload File
+  //  Upload File
   const handleUploadFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
