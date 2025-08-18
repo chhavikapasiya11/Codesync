@@ -6,8 +6,6 @@
 
 ## 🌟 Features
 
-## 🌟 Features
-
 ### **Core Features**
 - **Real-time Collaborative Editor:** Edit code simultaneously with peers using a Monaco-based editor integrated with Socket.IO.
 - **Multi-file Support:** Manage multiple files in a single session like VS Code.
