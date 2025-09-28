@@ -52,5 +52,10 @@ npm run dev
 cd ../frontend
 npm install
 npm start
-## **Access the deployed app**
+## Live App
+Access the deployed application:  
 https://codesync-1-2h1r.onrender.com
+## Demo Video
+Watch the working demo:  
+https://drive.google.com/file/d/1JMn0WrCuhnfwmPk6SKIm2AGtmMT3h9x9/view?usp=sharing
+
