@@ -1,23 +1,40 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# -----------------------------
+# Node / Dependencies
+# -----------------------------
 /node_modules
 /.pnp
 .pnp.js
-
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# -----------------------------
+# Build / Production
+# -----------------------------
+/build
+/coverage
+
+# -----------------------------
+# System / Misc
+# -----------------------------
+.DS_Store
+
+# -----------------------------
+# Environment files
+# -----------------------------
+# Backend secrets (hide these!)
+.env
+.env.*.local
+.env.production.local
+.env.test.local
+
+# Frontend (React) API URL can be safe to commit
+# REACT_APP_API_URL can remain in .env or set in Render
+# If you want to hide it, uncomment below:
+# .env.frontend
+# .env.frontend.local
+
+# -----------------------------
+# Other
+# -----------------------------
+/uploads/audio
