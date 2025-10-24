@@ -18,8 +18,8 @@ const server = http.createServer(app);
 
 
 const allowedOrigins = [
-  'http://localhost:3000',
-  'https://cdsc-frontend2.onrender.com'
+  "http://localhost:3000", 
+      "https://codesyncfin-frontend.onrender.com", 
 ];
 
 
