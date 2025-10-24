@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
 import { toast, Toaster } from "react-hot-toast";
-import API from "../api"; // ✅ centralized API module
+import API from "../api";
 
 export default function GitVersionPanel() {
   const location = useLocation();
@@ -22,10 +22,10 @@ export default function GitVersionPanel() {
   const audioChunksRef = useRef([]);
   const bottomRef = useRef(null);
   const socketRef = useRef(null);
-
+const baseURL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
   useEffect(() => {
     if (!sessionId) return;
-    socketRef.current = io("http://localhost:5000", {
+    socketRef.current = io(baseURL, {
       transports: ["websocket"],
       withCredentials: true,
     });
@@ -264,7 +264,7 @@ export default function GitVersionPanel() {
               </label>
               {v.audioPath && (
                 <audio controls style={{ display: "block", marginTop: "8px" }}>
-                  <source src={`http://localhost:5000${v.audioPath}`} type="audio/webm" />
+                  <source src={`${baseURL}${v.audioPath}`} type="audio/webm" />
                 </audio>
               )}
             </li>
