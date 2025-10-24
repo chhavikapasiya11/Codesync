@@ -75,7 +75,6 @@ const socketToSession = {};
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
-  // let autoSaveInterval = null; // ⛔ Disabled auto-save
 
   socket.on('join-session', ({ sessionId, userId }) => {
     socket.join(sessionId);

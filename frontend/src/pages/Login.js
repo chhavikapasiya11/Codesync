@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API from "../api"; // import your axios instance
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -10,12 +10,13 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", { email, password });
+      // Use API instance instead of axios
+      const res = await API.post("/auth/login", { email, password });
       const { token, user } = res.data;
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("isLoggedIn", "true");
-      alert(" Login successful!");
+      alert("Login successful!");
       navigate("/sessions");
     } catch (err) {
       alert(err.response?.data?.msg || "Login failed ❌");

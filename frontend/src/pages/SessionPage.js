@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API from "../api"; 
 
 const SessionPage = () => {
   const [sessionName, setSessionName] = useState("");
@@ -13,22 +13,11 @@ const SessionPage = () => {
 
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
-  const token = localStorage.getItem("token");
-
-  const axiosConfig = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
 
   const handleCreateSession = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/sessions/create",
-        { sessionName },
-        axiosConfig
-      );
+      const res = await API.post("/sessions/create", { sessionName });
       const newSessionId = res.data.session.sessionId;
       setSessionName("");
       localStorage.setItem("sessionId", newSessionId);
@@ -41,11 +30,7 @@ const SessionPage = () => {
   const handleJoinSession = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/sessions/join",
-        { sessionId: joinSessionId },
-        axiosConfig
-      );
+      const res = await API.post("/sessions/join", { sessionId: joinSessionId });
       const joinedSessionId = res.data.session.sessionId;
       setJoinSessionId("");
       localStorage.setItem("sessionId", joinedSessionId);
@@ -58,10 +43,7 @@ const SessionPage = () => {
   const fetchSessions = async () => {
     if (!user || !user.id) return;
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/sessions/user/${user.id}`,
-        axiosConfig
-      );
+      const res = await API.get(`/sessions/user/${user.id}`);
       setUserSessions(res.data);
     } catch (err) {
       setMessage("Failed to load sessions.");
@@ -71,11 +53,11 @@ const SessionPage = () => {
   const handleCopy = (id) => {
     navigator.clipboard.writeText(id);
     setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000); // Reset after 2s
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   useEffect(() => {
-    if (!user || !token) {
+    if (!user) {
       navigate("/login");
     } else {
       fetchSessions();
@@ -141,9 +123,7 @@ const SessionPage = () => {
             maxWidth: "500px",
           }}
         >
-          <h4 style={{ color: "#38f9d7", marginBottom: "20px" }}>
-            Create Session
-          </h4>
+          <h4 style={{ color: "#38f9d7", marginBottom: "20px" }}>Create Session</h4>
           <form onSubmit={handleCreateSession}>
             <input
               type="text"
@@ -190,9 +170,7 @@ const SessionPage = () => {
             maxWidth: "500px",
           }}
         >
-          <h4 style={{ color: "#f5b4ff", marginBottom: "20px" }}>
-            Join Session
-          </h4>
+          <h4 style={{ color: "#f5b4ff", marginBottom: "20px" }}>Join Session</h4>
           <form onSubmit={handleJoinSession}>
             <input
               type="text"
@@ -229,11 +207,9 @@ const SessionPage = () => {
         </div>
       </div>
 
-      {/* Sessions */}
+      {/* Sessions List */}
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-        <h4 style={{ color: "#29ff94", marginBottom: "20px" }}>
-          Your Sessions
-        </h4>
+        <h4 style={{ color: "#29ff94", marginBottom: "20px" }}>Your Sessions</h4>
         {userSessions.length === 0 ? (
           <p style={{ color: "#aaa" }}>No sessions found.</p>
         ) : (

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import API from "../api"; 
 
 const Signup = () => {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
@@ -11,22 +11,22 @@ const Signup = () => {
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await axios.post("http://localhost:5000/api/auth/signup", formData);
-    setMsg(res.data.msg);
+    e.preventDefault();
+    try {
+      // Use API.js instance instead of axios directly
+      const res = await API.post("/auth/signup", formData);
+      setMsg(res.data.msg);
 
-    const { token, user } = res.data;
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-   localStorage.setItem("isLoggedIn", "true");
+      const { token, user } = res.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("isLoggedIn", "true");
 
-    navigate("/sessions"); 
-  } catch (err) {
-    setMsg(err.response?.data?.msg || "Signup failed");
-  }
-};
-
+      navigate("/sessions"); 
+    } catch (err) {
+      setMsg(err.response?.data?.msg || "Signup failed");
+    }
+  };
 
   return (
     <div className="container-fluid d-flex justify-content-center align-items-center min-vh-100" style={{ background: "#0a0c10", fontFamily: "Segoe UI, sans-serif" }}>
