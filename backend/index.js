@@ -19,7 +19,7 @@ const server = http.createServer(app);
 
 const allowedOrigins = [
   "http://localhost:3000", 
-      "https://codesyncfin-frontend.onrender.com", 
+      "https://codesyncfinal-frontend.onrender.com", 
 ];
 
 
