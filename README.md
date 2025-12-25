@@ -41,27 +41,33 @@
 
 ## ⚙️ Installation
 
-## **Clone the repository**
-bash
+### Clone the repository
+```bash
 git clone https://github.com/chhavikapasiya11/Codesync.git
 cd Codesync
-Run locally
-Backend
-bash
-Copy code
+```
+
+### Run locally
+
+#### Backend
+```bash
 cd backend
 npm install
 npm run dev
-Frontend
-bash
-Copy code
+```
+
+#### Frontend
+```bash
 cd ../frontend
 npm install
 npm start
-Live App
-Access the deployed application:
+```
+
+## 🌐 Live App
+Access the deployed application:  
 https://codesyncfinal-frontend.onrender.com
-## Demo Video
+
+## 🎥 Demo Video
 Watch the working demo:  
 https://drive.google.com/file/d/1JMn0WrCuhnfwmPk6SKIm2AGtmMT3h9x9/view?usp=sharing
 
