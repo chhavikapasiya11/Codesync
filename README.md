@@ -53,7 +53,7 @@ cd Codesync
 ```bash
 cd backend
 npm install
-npm run dev
+node index.js
 ```
 
 #### Frontend
